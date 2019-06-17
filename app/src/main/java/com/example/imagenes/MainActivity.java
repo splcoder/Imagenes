@@ -1,6 +1,8 @@
 package com.example.imagenes;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -14,10 +16,17 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import es.dmoral.toasty.Toasty;
 
 public class MainActivity extends AppCompatActivity {
 	Button btnCamara;
+	Button btnSiguiente;
 	Button btnGaleria;
 	ImageView img;
 
@@ -30,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_main);
 
 		btnCamara = findViewById( R.id.btnCamara );
+		btnSiguiente = findViewById( R.id.btnSiguiente );
 		btnGaleria = findViewById( R.id.btnGaleria );
 		img = findViewById( R.id.img );
 
@@ -40,6 +50,14 @@ public class MainActivity extends AppCompatActivity {
 				if( intent.resolveActivity( getPackageManager() ) != null )
 					startActivityForResult( intent, RESULTADO_CAMARA );
 				else	Toasty.error( getApplicationContext(), "No existe acceso a la cámara.", Toast.LENGTH_SHORT, true ).show();
+			}
+		});
+
+		btnSiguiente.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent( MainActivity.this, MostrarImagenActivity.class );
+				startActivity( intent );
 			}
 		});
 
@@ -69,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
 					Bundle extras = data.getExtras();
 					Bitmap bitmap = (Bitmap)extras.get( "data" );	// View -> Tool Windows -> Device File Explorer >>> data/data/app
 					img.setImageBitmap( bitmap );
+					//--- To Datos ---
+					saveImage( bitmap );
 				}
 				else	Toasty.error( getApplicationContext(), "No se ha podido cargar la foto.", Toast.LENGTH_SHORT, true ).show();
 				break;
@@ -78,7 +98,40 @@ public class MainActivity extends AppCompatActivity {
 
 	public void ponerFoto( String uri ) {
 		if( uri != null && ! uri.isEmpty() && ! uri.equals( "null" ) ){
-			img.setImageURI( Uri.parse( uri ) );
+			Uri imageUri = Uri.parse( uri );
+			img.setImageURI( imageUri );
+			//--- To Datos ---
+			//Bitmap bitmap = Bitmap.createBitmap( Uri.parse( uri ) );
+			Bitmap bitmap = null;
+			try {
+				bitmap = MediaStore.Images.Media.getBitmap( this.getContentResolver(), imageUri );
+				saveImage( bitmap );
+			} catch (IOException e) {
+				e.printStackTrace();
+				Toasty.error( getApplicationContext(), "No se ha podido cargar la foto.", Toast.LENGTH_SHORT, true ).show();
+			}
+		}
+	}
+
+	public void saveImage( Bitmap bitmap ){
+		ContextWrapper cw = new ContextWrapper(getApplicationContext());
+		File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String fileName = "Image_" + timeStamp + "jpg";
+		File file = new File(directory, fileName);
+		if(!file.exists()){
+			Log.d("pathImage", file.toString());
+			FileOutputStream fos = null;
+			try{
+				fos = new FileOutputStream(file);
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+				fos.flush();
+				fos.close();
+				Datos.listaImagenes.add( bitmap );
+				Log.d("pathImage", file.toString());
+			}catch (java.io.IOException e){
+				e.printStackTrace();
+			}
 		}
 	}
 }

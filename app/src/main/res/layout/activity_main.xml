@@ -59,4 +59,16 @@
 		app:layout_constraintTop_toTopOf="@+id/guideline2"
 		app:srcCompat="@drawable/ic_launcher_foreground" />
 
+	<Button
+		android:id="@+id/btnSiguiente"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="8dp"
+		android:layout_marginEnd="8dp"
+		android:text="Siguiente"
+		android:textAllCaps="false"
+		app:layout_constraintEnd_toStartOf="@+id/btnGaleria"
+		app:layout_constraintStart_toEndOf="@+id/btnCamara"
+		app:layout_constraintTop_toTopOf="@+id/btnCamara" />
+
 </android.support.constraint.ConstraintLayout>
